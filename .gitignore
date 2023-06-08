@@ -1,0 +1,11 @@
+#Directories
+.vs/
+x64/
+third_party/
+
+#files
+**.sln
+**.vcxproj
+**.vcxproj.filters
+**.vcxproj.user
+**.csproj
