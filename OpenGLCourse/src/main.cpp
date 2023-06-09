@@ -14,21 +14,22 @@ const unsigned int SCR_HEIGHT = 600;
 
 // Shaders Code
 const char* vertexShaderSource = "#version 330 core\n"
-	"layout (location = 0) in vec3 aPos;\n" 
-	"out vec4 vertexColor;\n"
+	"layout (location = 0) in vec3 aPos;\n"
+	"layout (location = 1) in vec3 aColor;\n"
+	"out vec3 newColor;\n"
 	"void main()\n"
 	"{\n"
-	"  gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-	"  vertexColor = vec4(0.5, 0.0, 0.0, 1.0);\n"
+	"  gl_Position = vec4(aPos, 1.0);\n"
+	"  newColor = aColor;\n"
 	"}\0";
 
 const char* FragmentShaderSource = "#version 330 core\n"
 	"out vec4 FragColor;\n"
-	"in vec4 vertexColor;\n"
+	"in vec3 newColor;\n"
 	"uniform vec4 ourColor;\n"
 	"void main()\n"
 	"{\n"
-	"  FragColor = ourColor;\n "
+	"  FragColor = vec4(newColor, 1.0);\n"
 	"}\0";
 
 
@@ -121,16 +122,27 @@ int main()
 
 	// set up vertex data (and buffer(s)) and configure vertex attributes
 	// ------------------------------------------------------------------
-	float vertices[] = {
+	/*float vertices[] = {
 		 0.5f,  0.5f, 0.0f,   // top right        - vertex 1
 		 0.5f, -0.5f, 0.0f,   // bottom right     - vertex 2
 		-0.5f, -0.5f, 0.0f,   // bottom left      - vertex 3
 		-0.5f,  0.5f, 0.0f    // top left         - vertex 4
+	};*/
+
+	float vertices[] = {
+		// positions 0       // colors 1
+		0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   // bottom right
+	   -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
+		0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // top 
 	};
 
-	unsigned int indices[] = {
+	/*unsigned int indices[] = {
 		0, 1, 3,         //  triangle 1
 		1, 2, 3           //  triangle 2
+	};*/
+
+	unsigned int indices[] = {
+		0, 1, 2,
 	};
 
 	unsigned int VAO, VBO, EBO;
@@ -152,8 +164,12 @@ int main()
 
 	// 4. then set our vertex attributes pointers
 	// Layout tell OpenGL how it should interpret the vertex data
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);  // layout 0 del shader, 3 values ( cada vertex ), son float, normslized false, stride, start
+	// Position
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);  // layout 0 del shader, 3 values ( cada vertex ), son float, normslized false, stride, start
 	glEnableVertexAttribArray(0);
+	// Color
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
 
 	// Unbinds
 	// note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
