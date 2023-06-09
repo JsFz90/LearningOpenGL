@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h>
 
 #include <iostream>
+#include <cmath>
 
 // Function prototype Declaration
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -14,16 +15,20 @@ const unsigned int SCR_HEIGHT = 600;
 // Shaders Code
 const char* vertexShaderSource = "#version 330 core\n"
 	"layout (location = 0) in vec3 aPos;\n" 
+	"out vec4 vertexColor;\n"
 	"void main()\n"
 	"{\n"
 	"  gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+	"  vertexColor = vec4(0.5, 0.0, 0.0, 1.0);\n"
 	"}\0";
 
 const char* FragmentShaderSource = "#version 330 core\n"
 	"out vec4 FragColor;\n"
+	"in vec4 vertexColor;\n"
+	"uniform vec4 ourColor;\n"
 	"void main()\n"
 	"{\n"
-	"  FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n "
+	"  FragColor = ourColor;\n "
 	"}\0";
 
 
@@ -63,6 +68,11 @@ int main()
 		std::cout << "Failed to initialize GLAD" << std::endl;
 		return -1;
 	}
+
+	// There is a maximum number of vertex attributes we're allowed to declare limited by the hardware.
+	int nvAttrs = 0;
+	glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &nvAttrs);
+	std::cout << "Maximun number of vertex attributes supported: " << nvAttrs << std::endl;
 
 	// build and compile our shader program
 	// ------------------------------------
@@ -147,7 +157,7 @@ int main()
 
 	// Unbinds
 	// note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	//glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	// remember: do NOT unbind the EBO while a VAO is active as the bound element buffer object IS stored in the VAO; keep the EBO bound.
 
@@ -175,6 +185,13 @@ int main()
 
 		// draw our first triangle
 		glUseProgram(program);
+
+		//update shader uniform
+		double timeValue = glfwGetTime();   // returns time in seconds
+		float greenValue = static_cast<float>((sin(timeValue) / 2) + 0.5);   //sin siempre da un valor entre 0 y 1 
+		int vertexColorLocation = glGetUniformLocation(program, "ourColor"); // si es -1 no se encontro el uniform
+		glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+
 		glBindVertexArray(VAO);
 		//glDrawArrays(GL_TRIANGLES, 0, 3); // GL_TRIANGLES, second argument specifies the starting index of the vertex array, last argument specifies how many vertices we want to draw
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);  // 6 indices
