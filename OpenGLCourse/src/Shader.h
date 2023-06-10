@@ -44,7 +44,6 @@ public:
 		{
 			std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ: " << error.what() << std::endl;
 		}
-		
 		// 2. Compile shaders
 		const char* vShaderSource = vertexSource.c_str();
 		const char* fShaderSource = fragmentSource.c_str();

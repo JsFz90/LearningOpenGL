@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cmath>
 #include "Shader.h"
+#include "stb_image.h"
 
 // Function prototype Declaration
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -62,28 +63,29 @@ int main()
 
 	// set up vertex data (and buffer(s)) and configure vertex attributes
 	// ------------------------------------------------------------------
-	/*float vertices[] = {
-		 0.5f,  0.5f, 0.0f,   // top right        - vertex 1
-		 0.5f, -0.5f, 0.0f,   // bottom right     - vertex 2
-		-0.5f, -0.5f, 0.0f,   // bottom left      - vertex 3
-		-0.5f,  0.5f, 0.0f    // top left         - vertex 4
-	};*/
-
 	float vertices[] = {
-		// positions 0       // colors 1
-		0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   // bottom right
-	   -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
-		0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // top 
+		 // positions 0       // colors 1       // texture coords 
+		 0.5f,  0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   1.0f, 1.0f,                   // top right        - vertex 1
+		 0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   1.0f, 0.0f,                   // bottom right     - vertex 2
+		-0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,   0.0f, 0.0f,                   // bottom left      - vertex 3
+		-0.5f,  0.5f, 0.0f,  1.0f, 1.0f, 0.0f,   0.0f, 1.0f                    // top left         - vertex 4
 	};
 
-	/*unsigned int indices[] = {
-		0, 1, 3,         //  triangle 1
-		1, 2, 3           //  triangle 2
+	/*float vertices[] = {
+		// positions 0       // colors 1        // texture coords
+		0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   1.0f, 0.0f,               // bottom right
+	   -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   0.0f, 0.0f,                // bottom left
+		0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f,   0.5f, 1.0f                 // top 
 	};*/
 
 	unsigned int indices[] = {
-		0, 1, 2,
+		0, 1, 3,         //  triangle 1
+		1, 2, 3           //  triangle 2
 	};
+
+	/*unsigned int indices[] = {
+		0, 1, 2,
+	};*/
 
 	unsigned int VAO, VBO, EBO;
 	// Gen Vertex Array Object, Vertex Buffer Object and Element Buffer Object(Index Buffer)
@@ -104,12 +106,44 @@ int main()
 
 	// 4. then set our vertex attributes pointers
 	// Layout tell OpenGL how it should interpret the vertex data
-	// Position
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);  // layout 0 del shader, 3 values ( cada vertex ), son float, normslized false, stride, start
+	// Position attribute
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);  // layout 0 del shader, 3 values ( cada vertex ), son float, normslized false, stride, start
 	glEnableVertexAttribArray(0);
-	// Color
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	// Color attribute
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
+	// Texture coord attribute
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+
+	// load and create a texture 
+    // -------------------------
+	unsigned int textureID;
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_2D, textureID); // all upcoming GL_TEXTURE_2D operations now have effect on this texture object
+	// set the texture wrapping parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// set texture filtering parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// load image, create texture and generate mipmaps
+	int width, height, channels;
+	// OpenGL expects the 0.0 coordinate on the y-axis to be on the bottom side of the image, but images usually have 0.0 at the top of the y-axis. 
+	// Luckily for us, stb_image.h can flip the y-axis during image loading by adding the following statement before loading any image
+	stbi_set_flip_vertically_on_load(true); //tell stb_image.h to flip loaded texture's on the y-axis.
+	unsigned char* data = stbi_load("src/assets/textures/container.jpg", &width, &height, &channels, 0);
+	if (data)
+	{
+		// texture target, mipmap level, kind of format we want to store the texture, width, height, should always be 0 (some legacy stuff),
+		// 7th and 8th argument specify the format and datatype of the source image, The last argument is a ptr to the actual image data.
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D); //  call glGenerateMipmap after generating the texture. This will automatically generate all the required mipmaps for the currently bound texture
+	}
+	else { std::cout << "ERROR::TEXTURE::FAILED_TO_LOAD_TEXTURE" << std::endl; }
+	
+	stbi_image_free(data); // free data
+
 
 	// Unbinds
 	// note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
