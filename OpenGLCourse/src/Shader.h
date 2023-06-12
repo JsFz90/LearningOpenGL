@@ -84,6 +84,12 @@ public:
 
 	// utility uniform functions
    // ------------------------------------------------------------------------
+	void SetInt(const std::string& name, int value)
+	{
+		int location = glGetUniformLocation(m_ID, name.c_str());
+		glUniform1i(location, value);
+	}
+
 	void SetFloat4(const std::string& name, const vector4& value)
 	{
 		int location = glGetUniformLocation(m_ID, name.c_str());

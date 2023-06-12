@@ -118,7 +118,9 @@ int main()
 
 	// load and create a texture 
     // -------------------------
-	unsigned int textureID;
+	unsigned int textureID, texture2ID;
+	// texture 1
+	// ---------
 	glGenTextures(1, &textureID);
 	glBindTexture(GL_TEXTURE_2D, textureID); // all upcoming GL_TEXTURE_2D operations now have effect on this texture object
 	// set the texture wrapping parameters
@@ -141,9 +143,27 @@ int main()
 		glGenerateMipmap(GL_TEXTURE_2D); //  call glGenerateMipmap after generating the texture. This will automatically generate all the required mipmaps for the currently bound texture
 	}
 	else { std::cout << "ERROR::TEXTURE::FAILED_TO_LOAD_TEXTURE" << std::endl; }
-	
 	stbi_image_free(data); // free data
 
+	// texture 1
+	// ---------
+	glGenTextures(1, &texture2ID);
+	glBindTexture(GL_TEXTURE_2D, texture2ID);
+	// set the texture wrapping parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// set texture filtering parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// load image, create texture and generate mipmaps
+	data = stbi_load("src/assets/textures/awesomeface.png", &width, &height, &channels, 0);
+	if (data)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data); 
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else { std::cout << "ERROR::TEXTURE::FAILED_TO_LOAD_TEXTURE" << std::endl; }
+	stbi_image_free(data); // free data
 
 	// Unbinds
 	// note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
@@ -159,6 +179,13 @@ int main()
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
 
+
+	// tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
+	// -------------------------------------------------------------------------------------------
+	firstShader.Bind();  // don't forget to activate the shader before setting uniforms!
+	firstShader.SetInt("texture1", 0);
+	firstShader.SetInt("texture2", 1);
+
 	// Render Loop
 	// -------------------------------------
 	while (!glfwWindowShouldClose(window))  // The glfwWindowShouldClose function checks at the start of each loop iteration if GLFW has been instructed to close
@@ -173,14 +200,21 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT);
 		// the glClearColor function is a state-setting function and glClear is a state-using function in that it uses the current state to retrieve the clearing color from.
 
+		 // bind textures on corresponding texture units
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, textureID);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, texture2ID);
+
 		// draw our first triangle
 		firstShader.Bind();
 
 		//update shader uniform
+		/*
 		double timeValue = glfwGetTime();   // returns time in seconds
 		float greenValue = static_cast<float>((sin(timeValue) / 2) + 0.5);   //sin siempre da un valor entre 0 y 1 
 		firstShader.SetFloat4("ourColor", { 0.0f, greenValue, 0.0f, 1.0f });
-
+		*/
 		glBindVertexArray(VAO);
 		//glDrawArrays(GL_TRIANGLES, 0, 3); // GL_TRIANGLES, second argument specifies the starting index of the vertex array, last argument specifies how many vertices we want to draw
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);  // 6 indices
